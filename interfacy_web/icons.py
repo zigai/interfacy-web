@@ -1,0 +1,21 @@
+"""Important icons from Material Design Icons (https://fonts.google.com/icons)."""
+
+
+class ICONS:
+    DELETE = "delete"
+    CLOSE = "close"
+    EDIT = "edit"
+    ADD = "add"
+    DONE = "done"
+    REFRESH = "refresh"
+    FOLDER = "folder"
+    FOLDER_OPEN = "folder_open"
+    SAVE_AS = "save_as"
+    LINK = "link"
+    STAR = "star"
+    OPEN_IN_NEW = "open_in_new"
+    UPLOAD_FILE = "upload_file"
+    SETTINGS = "settings"
+    FAVORITE = "favorite"
+    APPS = "apps"
+    DEBUG = "debug"
