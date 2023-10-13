@@ -10,8 +10,6 @@ from interfacy_web.parser import DEFAULT_VALUES
 
 
 class MagicCard(DraggableCard):
-    width_class = "w-fit-content"
-
     def __init__(
         self,
         elements_per_row: list[int],
@@ -21,10 +19,11 @@ class MagicCard(DraggableCard):
         icon_size: str = "32px",
         draggable: bool = False,
         expandable: bool = False,
-        add_delete_button: bool = True,
-        add_default_button: bool = True,
-        add_clear_button: bool = True,
+        add_delete_button: bool = False,
+        add_default_button: bool = False,
+        add_clear_button: bool = False,
         add_button_tooltips: bool = True,
+        width_class: str = "w-fit-content",
     ) -> None:
         self._title_text = title
         self._icon_name = icon
@@ -40,9 +39,12 @@ class MagicCard(DraggableCard):
         self.rows: list[ui.row] = []
         self.init_fields: dict[str, Element] = {}
 
-        super().__init__(drag_enabled=draggable)
+        super().__init__(drag_enabled=draggable, width_class=width_class)
         self.build_extras()
         self.build_extra_buttons()
+        if self._description_text:
+            with self:
+                tooltip(self._description_text)
 
     def new_row(self) -> ui.row:
         if self._expandable:
@@ -83,15 +85,11 @@ class MagicCard(DraggableCard):
         return " ".join(words)
 
     def build_title_row(self) -> None:
-        if not self._icon_name or not self._title_text:
-            return
+        # if not self._icon_name or not self._title_text:
+        #    return
 
         if self._expandable:
-            with ui.expansion(self._title_text, icon=self._icon_name).classes(
-                "w-60"
-            ) as self.top_row:
-                if self._description_text:
-                    ui.tooltip(self._description_text)
+            self.top_row = ui.expansion(self._title_text, icon=self._icon_name).classes("w-60")
             return
 
         with self.new_row() as self.top_row:
@@ -99,9 +97,6 @@ class MagicCard(DraggableCard):
                 self.icon = ui.icon(self._icon_name, size=self._icon_size)
             if self._title_text:
                 self.title = markdown_title(self._title_text, size=4)
-                if self._description_text:
-                    with self.title:
-                        ui.tooltip(self._description_text)
 
     def build_extra_buttons(self):
         with self:
@@ -117,7 +112,7 @@ class MagicCard(DraggableCard):
                     )
                     if self._add_button_tooltips:
                         with self.button_to_defaults:
-                            tooltip("Reset to defaults")
+                            tooltip("Reset fields")
                 if self._add_clear_button:
                     self.button_clear = ui.button(icon="backspace", on_click=self.clear_fields)
                     if self._add_button_tooltips:

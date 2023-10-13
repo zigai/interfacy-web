@@ -42,11 +42,11 @@ class Row(ui.row):
 class DraggableCard(ui.card):
     highlight_border = "border-2 border-blue-300"
     dragged_background = "bg-transparent"
-    width_class = "w-fit-content"
 
-    def __init__(self, drag_enabled: bool = True) -> None:
+    def __init__(self, drag_enabled: bool = True, width_class="w-fit-content") -> None:
         super().__init__()
         self.drag_enabled = drag_enabled
+        self.width_class = width_class
 
         with self.props("draggable").classes(f"cursor-pointer").classes(self.width_class):
             self.build()

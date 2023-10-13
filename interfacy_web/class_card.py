@@ -18,6 +18,7 @@ class ClassCard(MagicCard):
     def __init__(
         self,
         cls: T.Type,
+        ignored_fields: list[str] | None = None,
         title: bool = True,
         description: bool = False,
         icon: str | None = None,
@@ -25,15 +26,16 @@ class ClassCard(MagicCard):
         elements_per_row: list[int] | None = None,
         draggable: bool = False,
         extras: list[Element] | None = None,
-        add_delete_button: bool = True,
-        add_default_button: bool = True,
-        add_clear_button: bool = True,
+        add_delete_button: bool = False,
+        add_default_button: bool = False,
+        add_clear_button: bool = False,
         add_button_tooltips: bool = True,
+        width_class: str = "w-fit-content",
     ) -> None:
         self.cls = cls
         self.obj = Class(self.cls)
-
-        self.n_params = len(self.obj.init_method.params) if self.obj.init_method else 0
+        self.ignored_fields = ignored_fields or []
+        self.n_params = self.get_n_params()
         elements_per_row = elements_per_row or [1] * (self.n_params + len(extras or []))
 
         super().__init__(
@@ -47,9 +49,22 @@ class ClassCard(MagicCard):
             add_default_button=add_default_button,
             add_clear_button=add_clear_button,
             add_button_tooltips=add_button_tooltips,
+            width_class=width_class,
         )
 
         self._fill_elements_per_row()
+
+    def get_n_params(self) -> int:
+        params = self.get_init_params()
+        if not params:
+            return 0
+        return sum(1 for i in params.keys() if i not in self.ignored_fields)
+
+    def format_title(self, title: str) -> str:
+        title = super().format_title(title)
+        if title.endswith(" instance") and self.obj.is_initialized:
+            title = title[: -len(" instance")]
+        return title
 
     def build(self) -> None:
         init_method = self.obj.init_method
@@ -59,6 +74,8 @@ class ClassCard(MagicCard):
         self.build_title_row()
 
         for param in init_method.params:
+            if param.name in self.ignored_fields:
+                continue
             with self.get_current_row():
                 self.build_element_input(param)
 
@@ -67,9 +84,15 @@ class ClassCard(MagicCard):
         kwargs = {}
         if element_takes_label(elem):
             kwargs["label"] = self.format_label(param.name)
-        if not param.is_required:
-            kwargs["value"] = param.default
 
+        # Experimental
+        if self.obj.is_initialized:
+            kwargs["value"] = getattr(self.obj.instance, param.name)
+        elif not param.is_required:
+            kwargs["value"] = param.default
+        # ------
+        if param.type is bool:
+            kwargs["text"] = param.name.capitalize()
         e: Element = elem(**kwargs)  # type: ignore
         if param.description:
             with e:
@@ -115,6 +138,8 @@ class ClassCard(MagicCard):
         return args
 
     def get_instance(self) -> T.Any:
+        if self.obj.is_initialized:
+            return self.cls.__class__(**self.get_args())
         return self.cls(**self.get_args())
 
     def get_init_params(self) -> dict[str, Parameter]:
@@ -134,22 +159,26 @@ class PydanticModelCard(ClassCard):
         elements_per_row: list[int] | None = None,
         draggable: bool = False,
         extras: list[Element] | None = None,
-        add_delete_button: bool = True,
-        add_default_button: bool = True,
-        add_clear_button: bool = True,
+        add_delete_button: bool = False,
+        add_default_button: bool = False,
+        add_clear_button: bool = False,
+        add_button_tooltips: bool = True,
+        width_class: str = "w-fit-content",
     ) -> None:
         super().__init__(
             cls,
-            title,
-            description,
-            icon,
-            icon_size,
-            elements_per_row,
-            draggable,
-            extras,
-            add_delete_button,
-            add_default_button,
-            add_clear_button,
+            title=title,
+            description=description,
+            icon=icon,
+            icon_size=icon_size,
+            elements_per_row=elements_per_row,
+            draggable=draggable,
+            extras=extras,
+            add_delete_button=add_delete_button,
+            add_default_button=add_default_button,
+            add_clear_button=add_clear_button,
+            add_button_tooltips=add_button_tooltips,
+            width_class=width_class,
         )
 
     def build(self) -> None:

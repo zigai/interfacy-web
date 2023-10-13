@@ -146,6 +146,7 @@ class FilePicker:
         initial_directory: str | None = None,
         open_at_last_dir: bool = True,
         input_width_class="w-80",
+        valid_label: bool = True,
     ) -> None:
         self.open_file_dialog = FileDialog(
             select=select,
@@ -155,6 +156,7 @@ class FilePicker:
             initial_directory=initial_directory,
             open_at_last_dir=open_at_last_dir,
         )
+        self.valid_label = valid_label
         self.logger = logger.bind(title=self.__class__.__name__)
         self.auto_complete = []
         self.filepath: str | None = None
@@ -168,7 +170,8 @@ class FilePicker:
                 .classes(input_width_class)
                 .classes("font-mono")
             )
-            self.valid_file_label = ui.label("⚫")
+            if self.valid_label:
+                self.valid_file_label = ui.label("⚫")
             self.button_open_file_dialog = ui.button(
                 icon=ICONS.FOLDER_OPEN, on_click=self.open_dialog
             )
@@ -187,14 +190,17 @@ class FilePicker:
     def on_input_change(self):
         value = self.path_input.value
         if not value:
-            self.valid_file_label.text = "⚫"
+            if self.valid_label:
+                self.valid_file_label.text = "⚫"
             return
         if fs.exists(value):
-            self.valid_file_label.text = "🟢"
+            if self.valid_label:
+                self.valid_file_label.text = "🟢"
             self.auto_complete.append(value)
             self.path_input.set_autocomplete(self.auto_complete)
         else:
-            self.valid_file_label.text = "🔴"
+            if self.valid_label:
+                self.valid_file_label.text = "🔴"
 
     @property
     def value(self):

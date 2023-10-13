@@ -74,7 +74,7 @@ class TextareaPopup:
         with ui.dialog().classes("w-screen") as dialog, ui.card().classes("w-screen"):
             if self.title:
                 with ui.row().classes("items-center"):
-                    markdown_title(self.title, size=4)
+                    markdown_title(self.title, size=3)
 
             textarea = ui.textarea().classes("w-full").props(f"rows={self.rows}")
             if self.cols:
@@ -104,14 +104,14 @@ class TextareaPopup:
 
 
 @dataclass()
-class SelectionOptions:
+class SelectOption:
     name: str
     value: str
     tooltip: str | None = None
 
 
 async def select_popup(
-    options: list[SelectionOptions],
+    options: list[SelectOption],
     title: str | None = None,
     one_per_row: bool = False,
     width_class="w-screen",
@@ -131,7 +131,8 @@ async def select_popup(
         def make_button():
             button = ui.button(opt.name, on_click=partial(submit, value=opt.value))
             if opt.tooltip:
-                button.tooltip(opt.tooltip)
+                with button:
+                    tooltip(opt.tooltip)
 
         with ui.row().classes("items-center"):
             for opt in options:
