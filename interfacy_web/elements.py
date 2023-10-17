@@ -85,7 +85,7 @@ class TextareaPopup:
                 self.data = textarea.value
 
             def import_file():
-                path = file_dialog.open_dialog()
+                path = file_dialog.open()
                 if not path:
                     warning_message("No file selected")
                     return

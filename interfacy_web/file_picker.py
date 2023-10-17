@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import filedialog
 
 from nicegui import ui
+from nicegui.element import Element
 from stdl import fs
 
 from interfacy_web.icons import ICONS
@@ -66,26 +67,30 @@ class FileDialog:
     def __init__(
         self,
         select="file",
+        mode="open",
         multiple: bool = False,
-        title: str | None = None,
+        title_open: str | None = None,
+        title_save: str | None = None,
         filetypes: list[tuple[str, str]] = [("All files", "*.*")],
         initial_directory: str | None = None,
         open_at_last_dir: bool = True,
     ):
+        self.logger = logger.bind(title=self.__class__.__name__)
         self.select = select
         if self.select not in ["file", "dir"]:
             raise ValueError("Invalid selection type. Choose 'file' or 'dir'.")
+        self.mode = mode
 
         self.multiple = multiple
-        self.title = (
-            title or f"Select file{'s' if multiple else ''}"
+        self.title_open = (
+            title_open or f"Select file{'s' if multiple else ''}"
             if select == "file"
-            else "Select directory"
+            else "Select a directory"
         )
+        self.title_save = title_save or "Save file"
         self.filetypes = filetypes
         self.open_at_last_dir = open_at_last_dir
 
-        self.logger = logger.bind(title=self.__class__.__name__)
         self.last_dir = ""
         self.chosen = None
         self.initial_dir = initial_directory or os.getcwd()
@@ -95,12 +100,39 @@ class FileDialog:
             return self.initial_dir
         return self.last_dir or self.initial_dir
 
-    def open_dialog_hidden(self):
+    def open(self):
+        _TKINTER_ROOT.lift()  # Bring the root window to the front
+        _TKINTER_ROOT.attributes("-topmost", True)  # Make the root window always appear on top
+        # filename = self.open_dialog_hidden()
+
+        fn = self._save_dialog_hidden if self.mode == "save" else self._open_dialog_hidden
+        filepath = fn()
+
+        if filepath:
+            self.last_dir = os.path.dirname(
+                filepath[0] if self.multiple and self.mode == "open" else filepath
+            )
+            self.chosen = filepath
+        _TKINTER_ROOT.update()  # To make the dialog close completely before the next line of code is run
+
+        _TKINTER_ROOT.attributes("-topmost", False)  # Reset the topmost attribute
+        return filepath
+
+    def _save_dialog_hidden(self):
         options = {
             "initialdir": self._get_dir(),
-            "title": self.title,
+            "title": self.title_save,
+            "filetypes": self.filetypes,
         }
+        filename = filedialog.asksaveasfilename(**options)
+        self.logger.info(f"Save As filename: {filename}")
+        return filename
 
+    def _open_dialog_hidden(self):
+        options = {
+            "initialdir": self._get_dir(),
+            "title": self.title_open,
+        }
         if self.select == "file":
             options["filetypes"] = self.filetypes
             if self.multiple:
@@ -110,21 +142,7 @@ class FileDialog:
             filename = filedialog.askdirectory(**options)  # type: ignore
         else:
             raise ValueError("Invalid selection type. Choose 'file' or 'dir'.")
-        if filename:  # type: ignore
-            self.last_dir = os.path.dirname(filename[0] if self.multiple else filename)
-
-        _TKINTER_ROOT.update()  # To make the dialog close completely before the next line of code is run
-        if filename:
-            self.chosen = filename  # type: ignore
-            return filename  # type: ignore
-        return None
-
-    def open_dialog(self):
-        _TKINTER_ROOT.lift()  # Bring the root window to the front
-        _TKINTER_ROOT.attributes("-topmost", True)  # Make the root window always appear on top
-        filename = self.open_dialog_hidden()
-        _TKINTER_ROOT.attributes("-topmost", False)  # Reset the topmost attribute
-        self.logger.debug(f"Chosen file: {filename}")
+        self.logger.info(f"Chosen filename: {filename}")
         return filename
 
     @property
@@ -137,7 +155,7 @@ class FileDialog:
             raise NotImplementedError("Not implemented for directories")
 
 
-class FilePicker:
+class FilePicker(Element):
     def __init__(
         self,
         select="file",
@@ -148,10 +166,11 @@ class FilePicker:
         input_width_class="w-80",
         valid_label: bool = True,
     ) -> None:
+        super().__init__()
         self.open_file_dialog = FileDialog(
             select=select,
             multiple=False,
-            title=title,
+            title_open=title,
             filetypes=filetypes,
             initial_directory=initial_directory,
             open_at_last_dir=open_at_last_dir,
@@ -160,7 +179,7 @@ class FilePicker:
         self.logger = logger.bind(title=self.__class__.__name__)
         self.auto_complete = []
         self.filepath: str | None = None
-        with ui.row().classes("items-center"):
+        with ui.row().classes("items-center") as self.container:
             self.path_input = (
                 ui.input(
                     placeholder="No file selected",
@@ -177,7 +196,7 @@ class FilePicker:
             )
 
     def open_dialog(self):
-        filename = self.open_file_dialog.open_dialog()
+        filename = self.open_file_dialog.open()
         if filename:
             self.filepath = filename
             self.path_input.value = filename

@@ -48,7 +48,9 @@ class DraggableCard(ui.card):
         self.drag_enabled = drag_enabled
         self.width_class = width_class
 
-        with self.props("draggable").classes(f"cursor-pointer").classes(self.width_class):
+        with self.props("draggable").classes(f"cursor-pointer").classes(self.width_class).style(
+            "box-shadow: none;"
+        ):
             self.build()
 
         self.on("dragstart", self.on_dragstart)
