@@ -7,7 +7,6 @@ from nicegui.element import Element
 from stdl import fs
 
 from interfacy_web.icons import ICONS
-from interfacy_web.logger import logger
 
 _TKINTER_ROOT = tk.Tk()  # For file dialogs
 _TKINTER_ROOT.withdraw()
@@ -75,7 +74,6 @@ class FileDialog:
         initial_directory: str | None = None,
         open_at_last_dir: bool = True,
     ):
-        self.logger = logger.bind(title=self.__class__.__name__)
         self.select = select
         if self.select not in ["file", "dir"]:
             raise ValueError("Invalid selection type. Choose 'file' or 'dir'.")
@@ -125,7 +123,6 @@ class FileDialog:
             "filetypes": self.filetypes,
         }
         filename = filedialog.asksaveasfilename(**options)
-        self.logger.info(f"Save As filename: {filename}")
         return filename
 
     def _open_dialog_hidden(self):
@@ -142,7 +139,6 @@ class FileDialog:
             filename = filedialog.askdirectory(**options)  # type: ignore
         else:
             raise ValueError("Invalid selection type. Choose 'file' or 'dir'.")
-        self.logger.info(f"Chosen filename: {filename}")
         return filename
 
     @property
@@ -176,7 +172,6 @@ class FilePicker(Element):
             open_at_last_dir=open_at_last_dir,
         )
         self.valid_label = valid_label
-        self.logger = logger.bind(title=self.__class__.__name__)
         self.auto_complete = []
         self.filepath: str | None = None
         with ui.row().classes("items-center") as self.container:
@@ -202,8 +197,6 @@ class FilePicker(Element):
             self.path_input.value = filename
             self.auto_complete.append(filename)
             self.path_input.set_autocomplete(self.auto_complete)
-        else:
-            self.logger.warning("No file selected")
         return filename
 
     def on_input_change(self):

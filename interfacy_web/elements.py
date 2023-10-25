@@ -2,6 +2,7 @@ import datetime
 import os
 import typing as T
 from dataclasses import dataclass
+from enum import Enum
 from functools import partial
 
 from nicegui import ui
@@ -11,8 +12,24 @@ from stdl import dt, fs
 
 from interfacy_web.file_picker import FileDialog
 from interfacy_web.icons import ICONS
-from interfacy_web.logger import logger
 from interfacy_web.util import clean_var_name, is_valid_date
+
+ui.colors(info="black")
+ui.html("<style>.multi-line-notification { white-space: pre-line; }</style>")
+
+Position = T.Literal[
+    "top-left",
+    "top-right",
+    "bottom-left",
+    "bottom-right",
+    "top",
+    "bottom",
+    "left",
+    "right",
+    "center",
+]
+
+NotificationType = T.Literal["positive", "negative", "warning", "info", "ongoing"]
 
 
 class DatePicker(Element):
@@ -87,12 +104,12 @@ class TextareaPopup:
             def import_file():
                 path = file_dialog.open()
                 if not path:
-                    warning_message("No file selected")
+                    notification("No file selected", type="warning")
                     return
                 if os.path.isfile(path):
                     textarea.value = fs.File(path).read()
                 else:
-                    warning_message(f"Invalid file '{path}'")
+                    notification(f"Invalid file '{path}'", type="warning")
 
             with ui.row().classes("items-start"):
                 ui.button("Done", icon="done", on_click=submit)
@@ -242,33 +259,38 @@ def select_from_type_hint(
     ).classes(width_class)
 
 
-def warning_message(
-    message: str,
-    position: T.Literal[
-        "top-left",
-        "top-right",
-        "bottom-left",
-        "bottom-right",
-        "top",
-        "bottom",
-        "left",
-        "right",
-        "center",
-    ] = "bottom-left",
-    multi_line: bool = True,
+def notification(
+    text: str,
+    type: NotificationType | None = "info",
+    position: Position = "bottom-left",
+    *,
+    multi_line: bool = False,
+    close_button: str | T.Literal[False] = "✖",
+    progress: bool = True,
+    **kwargs,
 ):
-    ui.notify(message, type="warning", position=position, multi_line=multi_line)
-    logger.warning(message)
+    extra = {}
+    if multi_line:
+        extra["classes"] = "multi-line-notification"
+    ui.notify(
+        message=text,
+        type=type,
+        position=position,
+        close_button=close_button,  # type: ignore
+        progress=progress,
+        **extra,
+        **kwargs,
+    )
 
 
-def tooltip(message: str, big: bool = True, dark_mode: bool = True, mono_font: bool = True):
-    tooltip_element = ui.tooltip(message)
+def tooltip(message: str, large: bool = True, dark_mode: bool = True, mono_font: bool = True):
+    element = ui.tooltip(message)
     if dark_mode:
-        tooltip_element.classes("bg-grey-2").classes("text-black")
+        element.classes("bg-grey-2").classes("text-black")
     else:
-        tooltip_element.classes("bg-grey-10").classes("text-white")
+        element.classes("bg-grey-10").classes("text-white")
     if mono_font:
-        tooltip_element.classes("font-mono")
-    if big:
-        tooltip_element.classes("text-body2")
-    return tooltip_element
+        element.classes("font-mono")
+    if large:
+        element.classes("text-body2")
+    return element

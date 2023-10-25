@@ -4,7 +4,7 @@ from nicegui import ui
 from nicegui.element import Element
 from objinspect import Class, Parameter
 
-from interfacy_web.elements import tooltip, warning_message
+from interfacy_web.elements import notification, tooltip
 from interfacy_web.magic_card import SINGLE_ROW, MagicCard
 from interfacy_web.parser import DEFAULT_VALUES, STR_PARSER, element_for_type
 from interfacy_web.util import (
@@ -105,7 +105,7 @@ class ClassCard(MagicCard):
 
         if missing_args:
             for i in missing_args.values():
-                warning_message(i)
+                notification(i, type="warning")
             missing_names = ", ".join(f"'{i}'" for i in missing_args.keys())
             raise ValueError(f"Missing required arguments: {missing_names}")
         return args

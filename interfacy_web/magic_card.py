@@ -3,7 +3,6 @@ import sys
 
 from nicegui import ui
 from nicegui.element import Element
-from objinspect import Parameter
 
 from interfacy_web.draggable_card import DraggableCard
 from interfacy_web.elements import markdown_title, tooltip
