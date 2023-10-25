@@ -4,7 +4,7 @@ import sys
 from nicegui import ui
 from nicegui.element import Element
 
-from interfacy_web.draggable_card import DraggableElement
+from interfacy_web.draggable_element import DraggableElement
 from interfacy_web.elements import markdown_title, tooltip
 from interfacy_web.parser import DEFAULT_VALUES
 
@@ -99,7 +99,11 @@ class AutoElement(DraggableElement):
 
     def build_title_row(self) -> None:
         if self.is_expandable:
-            self.container = ui.expansion(self._title_text, icon=self._icon_name).classes("w-60")
+            self.container = ui.expansion(
+                self._title_text,
+                icon=self._icon_name,
+                value=True,
+            ).classes("w-60")
             if self._description_text:
                 with self.container:
                     tooltip(self._description_text)
@@ -129,7 +133,7 @@ class AutoElement(DraggableElement):
                 self.delete_button = self.create_delete_button()
 
     def create_delete_button(self):
-        button_delete = ui.button(icon="delete", on_click=self.del_from_col)
+        button_delete = ui.button(icon="delete", on_click=self.delete_from_parent)
         if self._add_button_tooltips:
             with button_delete:
                 tooltip("Delete")

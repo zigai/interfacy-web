@@ -4,18 +4,13 @@ from nicegui import ui
 from nicegui.element import Element
 from objinspect import Class, Parameter
 
+from interfacy_web.auto_element import SINGLE_ROW, AutoElement
 from interfacy_web.elements import notification, tooltip
-from interfacy_web.magic_card import SINGLE_ROW, AutoElement
 from interfacy_web.parser import DEFAULT_VALUES, STR_PARSER, element_for_type
-from interfacy_web.util import (
-    element_takes_label,
-    err_message_missing_param,
-    get_pydantic_init_params,
-    is_type,
-)
+from interfacy_web.util import element_takes_label, err_message_missing_param, is_type
 
 
-class ClassCard(AutoElement):
+class ClassElement(AutoElement):
     def __init__(
         self,
         cls: T.Type,
@@ -40,6 +35,7 @@ class ClassCard(AutoElement):
         self.n_params = self.get_n_params()
         elements_per_row = elements_per_row or [1] * (self.n_params + len(extras or []))
         self._title_value = title
+
         super().__init__(
             elements_per_row=elements_per_row,
             title=self.get_title(),
@@ -131,7 +127,6 @@ class ClassCard(AutoElement):
         if param.type is bool:
             kwargs["text"] = param.name.capitalize()
         e: Element = elem(**kwargs)  # type: ignore
-        print(param)
         if param.description:
             with e:
                 tooltip(param.description)
@@ -188,59 +183,4 @@ class ClassCard(AutoElement):
                 self.build_element_input(param)
 
 
-class PydanticModelCard(ClassCard):
-    def __init__(
-        self,
-        cls: T.Type,
-        title: bool = True,
-        description: bool = False,
-        icon: str | None = None,
-        icon_size: str = "32px",
-        elements_per_row: list[int] | None = None,
-        draggable: bool = False,
-        extras: list[Element] | None = None,
-        add_delete_button: bool = False,
-        add_default_button: bool = False,
-        expandable: bool = False,
-        add_clear_button: bool = False,
-        add_button_tooltips: bool = True,
-        width_class: str = "w-fit-content",
-    ) -> None:
-        super().__init__(
-            cls,
-            title=title,
-            description=description,
-            icon=icon,
-            icon_size=icon_size,
-            elements_per_row=elements_per_row,
-            draggable=draggable,
-            extras=extras,
-            add_delete_button=add_delete_button,
-            add_default_button=add_default_button,
-            add_clear_button=add_clear_button,
-            expandable=expandable,
-            add_button_tooltips=add_button_tooltips,
-            width_class=width_class,
-        )
-        if (
-            self._description_text
-            and "Usage docs: https:///docs.pyndantic.dev" in self._description_text
-        ):
-            self._description_text = None
-
-    def get_description(self, description: str | None) -> str | None:
-        if not description:
-            return None
-        if "Usage docs: https:///docs.pyndantic.dev" in description:
-            return None
-        return description
-
-    def get_init_params(self) -> dict[str, Parameter]:
-        return get_pydantic_init_params(self.cls)
-
-    def build(self) -> None:
-        self.build_title_row()
-
-        for param in self.get_init_params().values():
-            with self.get_current_row():
-                self.build_element_input(param)
+__all__ = ["ClassElement"]

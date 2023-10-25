@@ -1,47 +1,31 @@
 from __future__ import annotations
 
 import random
+import typing as T
 
 from nicegui import ui
 
 _dragged: DraggableElement | None = None
 
 
-class Column(ui.column):
-    def get_draggable_children(self) -> list[DraggableElement]:
-        children = []
-        for i in self.default_slot.children:
-            if issubclass(i.__class__, DraggableElement):
-                if i.drag_enabled:  # type:ignore
-                    children.append(i)
-        return children
-
-    def shuffle(self) -> None:
-        children = self.get_draggable_children()
-        random.shuffle(children)
-        for i in children:
-            i.move(target_index=0)
-
-
-class Row(ui.row):
-    def get_draggable_children(self) -> list[DraggableElement]:
-        children = []
-        for i in self.default_slot.children:
-            if issubclass(i.__class__, DraggableElement):
-                if i.drag_enabled:  # type:ignore
-                    children.append(i)
-        return children
-
-    def shuffle(self) -> None:
-        children = self.get_draggable_children()
-        random.shuffle(children)
-        for i in children:
-            i.move(target_index=0)
+def check_type(t: T.Type, obj: T.Any) -> bool:
+    """
+    Args:
+        t (T.Type): The allowed type. If this is :class:`DraggableElement`, then any subclass of :class:`DraggableElement` is allowed.
+        obj (T.Any): The object to check.
+    """
+    if t is DraggableElement:
+        if issubclass(obj.__class__, DraggableElement):
+            return True
+        return False
+    if isinstance(obj, t):
+        return True
+    return False
 
 
 class DraggableElement(ui.card):
     highlight_border = "border-2 border-blue-300"
-    dragged_background = "bg-transparent"
+    dragged_background = "bg-blue-950"
 
     def __init__(self, drag_enabled: bool = True, width_class="w-fit-content") -> None:
         super().__init__()
@@ -54,6 +38,7 @@ class DraggableElement(ui.card):
             self.build()
 
         self.on("dragstart", self.on_dragstart)
+        self.on("dragend", self.on_dragend)
         self.on("dragenter", self.on_dragenter)
         self.on("dragleave", self.on_dragleave)
         self.on("dragover.prevent", self.on_dragover_prevent)
@@ -75,7 +60,7 @@ class DraggableElement(ui.card):
     def get_parent(self) -> Column | Row | None:
         return self.parent_slot.parent  # type:ignore
 
-    def del_from_col(self) -> None:
+    def delete_from_parent(self) -> None:
         parent = self.get_parent()
         if parent is not None:
             parent.remove(self)
@@ -92,6 +77,9 @@ class DraggableElement(ui.card):
         global _dragged
         _dragged = self
 
+    def on_dragend(self) -> None:
+        self.classes(remove=self.dragged_background)
+
     def on_dragenter(self) -> None:
         if not self.drag_enabled:
             return
@@ -105,15 +93,18 @@ class DraggableElement(ui.card):
         self.classes(remove=self.highlight_border)
 
     def on_drop(self) -> None:
+        self.classes(remove=self.dragged_background)
         if not self.drag_enabled:
             return
-
         global _dragged
         if not _dragged:
             return
 
         parent = self.get_parent()
         if parent is None:
+            return
+
+        if not check_type(parent.t, _dragged):
             return
 
         children = parent.get_draggable_children()
@@ -129,6 +120,46 @@ class DraggableElement(ui.card):
     def on_dragover_prevent(self):
         """Prevent default dragover event to allow drop event"""
         return
+
+
+class Row(ui.row):
+    def __init__(self, t: T.Type = DraggableElement) -> None:
+        self.t = t
+        super().__init__()
+
+    def get_draggable_children(self) -> list[DraggableElement]:
+        children = []
+        for i in self.default_slot.children:
+            if issubclass(i.__class__, DraggableElement):
+                if i.drag_enabled:  # type:ignore
+                    children.append(i)
+        return children
+
+    def shuffle(self) -> None:
+        children = self.get_draggable_children()
+        random.shuffle(children)
+        for i in children:
+            i.move(target_index=0)
+
+
+class Column(ui.column):
+    def __init__(self, t: T.Type = DraggableElement) -> None:
+        self.t = t
+        super().__init__()
+
+    def get_draggable_children(self) -> list[DraggableElement]:
+        children = []
+        for i in self.default_slot.children:
+            if issubclass(i.__class__, DraggableElement):
+                if i.drag_enabled:  # type:ignore
+                    children.append(i)
+        return children
+
+    def shuffle(self) -> None:
+        children = self.get_draggable_children()
+        random.shuffle(children)
+        for i in children:
+            i.move(target_index=0)
 
 
 __all__ = ["DraggableElement", "Column"]

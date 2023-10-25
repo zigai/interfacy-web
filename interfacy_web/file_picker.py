@@ -59,7 +59,7 @@ class FileType:
         return [type_dict[type] for type in types]
 
 
-class FileDialog:
+class LocalFileDialog:
     """
     A wrapper around tkinter.filedialog
     """
@@ -152,7 +152,7 @@ class FileDialog:
             raise NotImplementedError("Not implemented for directories")
 
 
-class FilePickerElement(Element):
+class LocalFilePickerElement(Element):
     def __init__(
         self,
         select: T.Literal["file", "dir"] = "file",
@@ -164,7 +164,7 @@ class FilePickerElement(Element):
         add_file_exists_marker: bool = True,
     ) -> None:
         super().__init__()
-        self.file_dialog = FileDialog(
+        self.file_dialog = LocalFileDialog(
             select=select,
             multiple=False,
             title_open=title,
@@ -221,4 +221,4 @@ class FilePickerElement(Element):
         return self.path_input.value
 
 
-__all__ = ["FileType", "FileDialog", "FilePickerElement"]
+__all__ = ["FileType", "LocalFileDialog", "LocalFilePickerElement"]

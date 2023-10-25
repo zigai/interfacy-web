@@ -3,17 +3,20 @@ import os
 import typing as T
 from dataclasses import dataclass
 from functools import partial
+from typing import Any, Callable, Dict, List, Optional
 
 from nicegui import ui
 from nicegui.element import Element
 from objinspect.util import get_enum_choices, get_literal_choices, is_enum, is_literal
 from stdl import dt, fs
 
-from interfacy_web.file_picker import FileDialog
+from interfacy_web.file_picker import LocalFileDialog
 from interfacy_web.icons import ICONS
-from interfacy_web.util import clean_var_name, is_valid_date
+from interfacy_web.util import clean_variable_name, is_valid_date
 
 ui.colors(info="black")
+
+# For multi-line notifications
 ui.html("<style>.multi-line-notification { white-space: pre-line; }</style>")
 
 Position = T.Literal[
@@ -29,6 +32,95 @@ Position = T.Literal[
 ]
 
 NotificationType = T.Literal["positive", "negative", "warning", "info", "ongoing"]
+
+
+class Textarea(ui.textarea):
+    def __init__(
+        self,
+        label: Optional[str] = None,
+        *,
+        placeholder: Optional[str] = None,
+        value: str = "",
+        rows: int | None = None,
+        cols: int | None = None,
+        autogrow: bool = False,
+        clearable: bool = False,
+        filled: bool = False,
+        on_change: Optional[Callable[..., Any]] = None,
+        validation: Dict[str, Callable[..., bool]] = {},
+    ) -> None:
+        super().__init__(
+            label,
+            placeholder=placeholder,
+            value=value,
+            on_change=on_change,
+            validation=validation,
+        )
+        if autogrow:
+            self.props(add="autogrow")
+        if clearable:
+            self.props(add="clearable")
+        if filled:
+            self.props(add="filled")
+        if rows is not None:
+            self.props(f"rows={rows}")
+        if cols is not None:
+            self.props(f"cols={cols}")
+
+
+class TextareaDialog(Element):
+    def __init__(
+        self,
+        title: str | None = None,
+        rows: int = 30,
+        cols: int | None = None,
+        placeholder: str | None = None,
+        autogrow: bool = True,
+    ) -> None:
+        self.data: str | None = None
+        self.rows = rows
+        self.cols = cols
+        self.title = title
+        self.placeholder = placeholder
+        self.autogrow = autogrow
+        super().__init__()
+
+    async def open(self):
+        file_dialog = LocalFileDialog()
+        with ui.dialog().classes("w-screen") as dialog, ui.card().classes("w-screen"):
+            if self.title:
+                with ui.row().classes("items-center"):
+                    markdown_title(self.title, size=3)
+
+            textarea = Textarea(
+                rows=self.rows,
+                cols=self.cols,
+                placeholder=self.placeholder,
+                clearable=True,
+                autogrow=self.autogrow,
+            ).classes("w-full")
+
+            def submit():
+                dialog.submit(textarea.value)
+                self.data = textarea.value
+
+            def import_file():
+                path = file_dialog.open()
+                if not path:
+                    notification("No file selected", type="warning")
+                    return
+                if os.path.isfile(path):
+                    textarea.value = fs.File(path).read()
+                else:
+                    notification(f"Invalid file '{path}'", type="warning")
+
+            with ui.row().classes("items-start"):
+                ui.button("Done", icon="done", on_click=submit)
+                ui.button("From file", icon=ICONS.UPLOAD_FILE, on_click=import_file)
+                ui.button(icon=ICONS.CLOSE, on_click=dialog.close)
+
+        selected = await dialog
+        self.data = selected
 
 
 class DatePicker(Element):
@@ -71,52 +163,6 @@ class DatePicker(Element):
         with self.text_input:
             tooltip(text)
         return self
-
-
-class TextareaPopup:
-    def __init__(
-        self,
-        rows: int = 30,
-        cols: int | None = None,
-        title: str | None = None,
-    ) -> None:
-        self.data: str | None = None
-        self.rows = rows
-        self.cols = cols
-        self.title = title
-
-    async def open(self):
-        file_dialog = FileDialog()
-        with ui.dialog().classes("w-screen") as dialog, ui.card().classes("w-screen"):
-            if self.title:
-                with ui.row().classes("items-center"):
-                    markdown_title(self.title, size=3)
-
-            textarea = ui.textarea().classes("w-full").props(f"rows={self.rows}")
-            if self.cols:
-                textarea.props(f"cols={self.cols}")
-
-            def submit():
-                dialog.submit(textarea.value)
-                self.data = textarea.value
-
-            def import_file():
-                path = file_dialog.open()
-                if not path:
-                    notification("No file selected", type="warning")
-                    return
-                if os.path.isfile(path):
-                    textarea.value = fs.File(path).read()
-                else:
-                    notification(f"Invalid file '{path}'", type="warning")
-
-            with ui.row().classes("items-start"):
-                ui.button("Done", icon="done", on_click=submit)
-                ui.button("From file", icon=ICONS.UPLOAD_FILE, on_click=import_file)
-                ui.button(icon=ICONS.CLOSE, on_click=dialog.close)
-
-        selected = await dialog
-        self.data = selected
 
 
 @dataclass()
@@ -241,7 +287,7 @@ def select_from_type_hint(
     else:
         raise ValueError(f"Type {type(hint)} not supported. Must be Enum or Literal")
 
-    options = {i: clean_var_name(i) for i in choices}
+    options = {i: clean_variable_name(i) for i in choices}
 
     if value:
         if value not in options.keys():
