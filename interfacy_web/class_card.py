@@ -5,7 +5,7 @@ from nicegui.element import Element
 from objinspect import Class, Parameter
 
 from interfacy_web.elements import notification, tooltip
-from interfacy_web.magic_card import SINGLE_ROW, MagicCard
+from interfacy_web.magic_card import SINGLE_ROW, AutoElement
 from interfacy_web.parser import DEFAULT_VALUES, STR_PARSER, element_for_type
 from interfacy_web.util import (
     element_takes_label,
@@ -15,7 +15,7 @@ from interfacy_web.util import (
 )
 
 
-class ClassCard(MagicCard):
+class ClassCard(AutoElement):
     def __init__(
         self,
         cls: T.Type,

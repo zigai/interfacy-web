@@ -4,7 +4,7 @@ import sys
 from nicegui import ui
 from nicegui.element import Element
 
-from interfacy_web.draggable_card import DraggableCard
+from interfacy_web.draggable_card import DraggableElement
 from interfacy_web.elements import markdown_title, tooltip
 from interfacy_web.parser import DEFAULT_VALUES
 
@@ -12,7 +12,7 @@ SINGLE_ROW = [sys.maxsize]
 ONE_PER_ROW = [1]  # Will auto-expand
 
 
-class MagicCard(DraggableCard):
+class AutoElement(DraggableElement):
     def __init__(
         self,
         elements_per_row: list[int] = SINGLE_ROW,
@@ -159,4 +159,4 @@ class MagicCard(DraggableCard):
         raise NotImplementedError
 
 
-__all__ = ["MagicCard", "SINGLE_ROW", "ONE_PER_ROW"]
+__all__ = ["AutoElement", "SINGLE_ROW", "ONE_PER_ROW"]

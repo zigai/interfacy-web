@@ -2,7 +2,6 @@ import datetime
 import os
 import typing as T
 from dataclasses import dataclass
-from enum import Enum
 from functools import partial
 
 from nicegui import ui

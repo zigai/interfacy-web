@@ -4,14 +4,14 @@ import random
 
 from nicegui import ui
 
-_dragged: DraggableCard | None = None
+_dragged: DraggableElement | None = None
 
 
 class Column(ui.column):
-    def get_draggable_children(self) -> list[DraggableCard]:
+    def get_draggable_children(self) -> list[DraggableElement]:
         children = []
         for i in self.default_slot.children:
-            if issubclass(i.__class__, DraggableCard):
+            if issubclass(i.__class__, DraggableElement):
                 if i.drag_enabled:  # type:ignore
                     children.append(i)
         return children
@@ -24,10 +24,10 @@ class Column(ui.column):
 
 
 class Row(ui.row):
-    def get_draggable_children(self) -> list[DraggableCard]:
+    def get_draggable_children(self) -> list[DraggableElement]:
         children = []
         for i in self.default_slot.children:
-            if issubclass(i.__class__, DraggableCard):
+            if issubclass(i.__class__, DraggableElement):
                 if i.drag_enabled:  # type:ignore
                     children.append(i)
         return children
@@ -39,7 +39,7 @@ class Row(ui.row):
             i.move(target_index=0)
 
 
-class DraggableCard(ui.card):
+class DraggableElement(ui.card):
     highlight_border = "border-2 border-blue-300"
     dragged_background = "bg-transparent"
 
@@ -131,4 +131,4 @@ class DraggableCard(ui.card):
         return
 
 
-__all__ = ["DraggableCard", "Column"]
+__all__ = ["DraggableElement", "Column"]

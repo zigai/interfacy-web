@@ -1,5 +1,6 @@
 import os
 import tkinter as tk
+import typing as T
 from tkinter import filedialog
 
 from nicegui import ui
@@ -65,8 +66,8 @@ class FileDialog:
 
     def __init__(
         self,
-        select="file",
-        mode="open",
+        select: T.Literal["file", "dir"] = "file",
+        mode: T.Literal["open", "save"] = "open",
         multiple: bool = False,
         title_open: str | None = None,
         title_save: str | None = None,
@@ -93,7 +94,7 @@ class FileDialog:
         self.chosen = None
         self.initial_dir = initial_directory or os.getcwd()
 
-    def _get_dir(self):
+    def _get_dir(self) -> str:
         if not self.open_at_last_dir:
             return self.initial_dir
         return self.last_dir or self.initial_dir
@@ -151,19 +152,19 @@ class FileDialog:
             raise NotImplementedError("Not implemented for directories")
 
 
-class FilePicker(Element):
+class FilePickerElement(Element):
     def __init__(
         self,
-        select="file",
+        select: T.Literal["file", "dir"] = "file",
         title: str | None = None,
         filetypes=[FileType.ALL_FILES],
         initial_directory: str | None = None,
         open_at_last_dir: bool = True,
         input_width_class="w-80",
-        valid_label: bool = True,
+        add_file_exists_marker: bool = True,
     ) -> None:
         super().__init__()
-        self.open_file_dialog = FileDialog(
+        self.file_dialog = FileDialog(
             select=select,
             multiple=False,
             title_open=title,
@@ -171,7 +172,8 @@ class FilePicker(Element):
             initial_directory=initial_directory,
             open_at_last_dir=open_at_last_dir,
         )
-        self.valid_label = valid_label
+
+        self._add_file_exists_marker = add_file_exists_marker
         self.auto_complete = []
         self.filepath: str | None = None
         with ui.row().classes("items-center") as self.container:
@@ -184,14 +186,14 @@ class FilePicker(Element):
                 .classes(input_width_class)
                 .classes("font-mono")
             )
-            if self.valid_label:
-                self.valid_file_label = ui.label("⚫")
+            if self._add_file_exists_marker:
+                self.label_file_exists = ui.label("  ")
             self.button_open_file_dialog = ui.button(
                 icon=ICONS.FOLDER_OPEN, on_click=self.open_dialog
             )
 
     def open_dialog(self):
-        filename = self.open_file_dialog.open()
+        filename = self.file_dialog.open()
         if filename:
             self.filepath = filename
             self.path_input.value = filename
@@ -202,21 +204,21 @@ class FilePicker(Element):
     def on_input_change(self):
         value = self.path_input.value
         if not value:
-            if self.valid_label:
-                self.valid_file_label.text = "  "
+            if self._add_file_exists_marker:
+                self.label_file_exists.text = "  "
             return
         if fs.exists(value):
-            if self.valid_label:
-                self.valid_file_label.text = "🟢"
+            if self._add_file_exists_marker:
+                self.label_file_exists.text = "🟢"
             self.auto_complete.append(value)
             self.path_input.set_autocomplete(self.auto_complete)
         else:
-            if self.valid_label:
-                self.valid_file_label.text = "🔴"
+            if self._add_file_exists_marker:
+                self.label_file_exists.text = "🔴"
 
     @property
     def value(self):
         return self.path_input.value
 
 
-__all__ = ["FileType", "FileDialog", "FilePicker"]
+__all__ = ["FileType", "FileDialog", "FilePickerElement"]
