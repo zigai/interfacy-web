@@ -210,7 +210,7 @@ class FilePicker(Element):
         value = self.path_input.value
         if not value:
             if self.valid_label:
-                self.valid_file_label.text = "⚫"
+                self.valid_file_label.text = "  "
             return
         if fs.exists(value):
             if self.valid_label:

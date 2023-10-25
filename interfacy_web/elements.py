@@ -155,6 +155,7 @@ def markdown_title(
     margin: int = 0,
     border_radius: int = 0,
     unit: str = "px",
+    tooltip_text: str | None = None,
 ):
     """
     Create a markdown title.
@@ -181,6 +182,9 @@ def markdown_title(
         title = title.style(f"background-color: {background};")
 
     title = title.style(f"margin: {margin}{unit};").style(f"border-radius: {border_radius}{unit};")
+    if tooltip_text:
+        tooltip(tooltip_text)
+
     return title
 
 
@@ -257,7 +261,7 @@ def warning_message(
     logger.warning(message)
 
 
-def tooltip(message: str, big=True, dark_mode=True, mono_font=True):
+def tooltip(message: str, big: bool = True, dark_mode: bool = True, mono_font: bool = True):
     tooltip_element = ui.tooltip(message)
     if dark_mode:
         tooltip_element.classes("bg-grey-2").classes("text-black")

@@ -72,7 +72,7 @@ class DraggableCard(ui.card):
         self.classes(add="cursor-pointer")
         self.props(add="draggable")
 
-    def get_parent(self) -> Column | None:
+    def get_parent(self) -> Column | Row | None:
         return self.parent_slot.parent  # type:ignore
 
     def del_from_col(self) -> None:
