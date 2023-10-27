@@ -38,7 +38,6 @@ class DraggableElement(ui.card):
             self.build()
 
         self.on("dragstart", self.on_dragstart)
-        self.on("dragend", self.on_dragend)
         self.on("dragenter", self.on_dragenter)
         self.on("dragleave", self.on_dragleave)
         self.on("dragover.prevent", self.on_dragover_prevent)
@@ -77,9 +76,6 @@ class DraggableElement(ui.card):
         global _dragged
         _dragged = self
 
-    def on_dragend(self) -> None:
-        self.classes(remove=self.dragged_background)
-
     def on_dragenter(self) -> None:
         if not self.drag_enabled:
             return
@@ -104,9 +100,6 @@ class DraggableElement(ui.card):
         if parent is None:
             return
 
-        if not check_type(parent.t, _dragged):
-            return
-
         children = parent.get_draggable_children()
         try:
             self_index = children.index(self)
@@ -123,10 +116,6 @@ class DraggableElement(ui.card):
 
 
 class Row(ui.row):
-    def __init__(self, t: T.Type = DraggableElement) -> None:
-        self.t = t
-        super().__init__()
-
     def get_draggable_children(self) -> list[DraggableElement]:
         children = []
         for i in self.default_slot.children:
@@ -143,10 +132,6 @@ class Row(ui.row):
 
 
 class Column(ui.column):
-    def __init__(self, t: T.Type = DraggableElement) -> None:
-        self.t = t
-        super().__init__()
-
     def get_draggable_children(self) -> list[DraggableElement]:
         children = []
         for i in self.default_slot.children:
