@@ -1,9 +1,9 @@
 [project]
 name = "interfacy-web"
-version = "0.0.2"
+version = "0.0.3"
 description = ""
 authors = [{ name = "Žiga Ivanšek", email = "ziga.ivansek@gmail.com" }]
-license = { file = "LICENSE.txt" }
+license = { file = "LICENSE" }
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
