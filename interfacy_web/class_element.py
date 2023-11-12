@@ -31,10 +31,10 @@ class ClassElement(AutoElement):
     ) -> None:
         self.cls = cls
         self.obj = Class(self.cls)
+        self._title_value = title
         self.ignored_fields = ignored_fields or []
         self.n_params = self.get_n_params()
         elements_per_row = elements_per_row or [1] * (self.n_params + len(extras or []))
-        self._title_value = title
 
         super().__init__(
             elements_per_row=elements_per_row,
@@ -112,7 +112,7 @@ class ClassElement(AutoElement):
             title = title[: -len(" instance")]
         return title
 
-    def build_element_input(self, param: Parameter) -> None:
+    def add_input_element_for_param(self, param: Parameter) -> None:
         elem = element_for_type(param.type)
         kwargs = {}
         if element_takes_label(elem):
@@ -123,13 +123,16 @@ class ClassElement(AutoElement):
             kwargs["value"] = getattr(self.obj.instance, param.name)
         elif not param.is_required:
             kwargs["value"] = param.default
-        # ------
+
         if param.type is bool:
             kwargs["text"] = param.name.capitalize()
+
         e: Element = elem(**kwargs)  # type: ignore
+
         if param.description:
             with e:
                 tooltip(param.description)
+
         self.field_elements[param.name] = e
 
     def _fill_elements_per_row(self) -> None:
@@ -156,11 +159,11 @@ class ClassElement(AutoElement):
                     element.value = default_val  # type:ignore
 
     def create_reset_to_defaults_button(self):
-        button_to_reset_defaults = ui.button(icon="refresh", on_click=self.reset_to_defaults)
+        button = ui.button(icon="refresh", on_click=self.reset_to_defaults)
         if self._add_button_tooltips:
-            with button_to_reset_defaults:
+            with button:
                 tooltip("Reset")
-        return button_to_reset_defaults
+        return button
 
     def _build_extra_buttons(self):
         super()._build_extra_buttons()
@@ -180,7 +183,7 @@ class ClassElement(AutoElement):
             if param.name in self.ignored_fields:
                 continue
             with self.get_current_row():
-                self.build_element_input(param)
+                self.add_input_element_for_param(param)
 
 
 __all__ = ["ClassElement"]

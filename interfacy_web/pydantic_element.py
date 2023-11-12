@@ -85,7 +85,7 @@ class PydanticModelElement(ClassElement):
 
         for param in self.get_init_params().values():
             with self.get_current_row():
-                self.build_element_input(param)
+                self.add_input_element_for_param(param)
 
 
 __all__ = ["PydanticModelElement"]

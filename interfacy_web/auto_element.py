@@ -5,11 +5,11 @@ from nicegui import ui
 from nicegui.element import Element
 
 from interfacy_web.draggable_element import DraggableElement
-from interfacy_web.elements import markdown_title, tooltip
+from interfacy_web.elements import markdown_heading, tooltip
 from interfacy_web.parser import DEFAULT_VALUES
 
 SINGLE_ROW = [sys.maxsize]
-ONE_PER_ROW = [1]  # Will auto-expand
+ONE_PER_ROW = [1]  # will auto-expand
 
 
 class AutoElement(DraggableElement):
@@ -47,10 +47,11 @@ class AutoElement(DraggableElement):
         super().__init__(drag_enabled=draggable, width_class=width_class)
         self._build_extras()
         self._build_extra_buttons()
-
+        """
         if not self._icon_name and self._description_text:
             with self:
                 tooltip(self._description_text)
+        """
 
     def get_description(self, description: str | None) -> str | None:
         return description
@@ -103,7 +104,8 @@ class AutoElement(DraggableElement):
                 self._title_text,
                 icon=self._icon_name,
                 value=True,
-            ).classes("w-60")
+            ).classes(self.width_class)
+
             if self._description_text:
                 with self.container:
                     tooltip(self._description_text)
@@ -116,12 +118,15 @@ class AutoElement(DraggableElement):
             with self.get_current_row():
                 if self._icon_name:
                     self.icon = ui.icon(self._icon_name, size=self._icon_size)
-                    if self._description_text:
-                        with self.icon:
-                            tooltip(self._description_text)
 
                 if self._title_text:
-                    self.title = markdown_title(self._title_text, size=4)
+                    self.title = markdown_heading(
+                        self._title_text, level=4, tooltip_text=self._description_text
+                    )
+                else:
+                    if self._icon_name and self._description_text:
+                        with self.icon:
+                            tooltip(self._description_text)
 
     def _build_extra_buttons(self):
         if self._add_clear_button:

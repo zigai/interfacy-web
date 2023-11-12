@@ -3,7 +3,7 @@ import os
 import typing as T
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, Optional
 
 from nicegui import ui
 from nicegui.element import Element
@@ -90,7 +90,7 @@ class TextareaDialog(Element):
         with ui.dialog().classes("w-screen") as dialog, ui.card().classes("w-screen"):
             if self.title:
                 with ui.row().classes("items-center"):
-                    markdown_title(self.title, size=3)
+                    markdown_heading(self.title, level=3)
 
             textarea = Textarea(
                 rows=self.rows,
@@ -185,7 +185,7 @@ async def select_popup(
         "items-center"
     ).classes(width_class):
         if title:
-            markdown_title(title, size=4)
+            markdown_heading(title, level=4)
 
         def submit(value):
             dialog.submit(value)
@@ -208,9 +208,9 @@ async def select_popup(
     return selected
 
 
-def markdown_title(
+def markdown_heading(
     value: str,
-    size: int = 1,
+    level: int = 1,
     center: bool = False,
     *,
     background: str | None = None,
@@ -224,30 +224,34 @@ def markdown_title(
 
     Args:
         value (str): The title text.
-        size (int, optional): The title size. Defaults to 1. Must be between 1 and 6.
-        margin (int, optional): The title margin. Defaults to 0.
-        border_radius (int, optional): The title border radius. Defaults to 0.
-        unit (str, optional): The unit of the margin and border radius. Defaults to "px".
-        background (str, optional): The title background color. Defaults to None.
+        size (int, optional): The title size. Defaults to 1. Must be between 1 and 6. See https://www.markdownguide.org/basic-syntax/#headings.
         center (bool, optional): Whether to center the title. Defaults to False.
+        background (str, optional): The background color. Defaults to None.
+        margin (int, optional): The margin. Defaults to 0.
+        border_radius (int, optional): The border radius. Defaults to 0.
+        unit (str, optional): The unit for margin and border_radius. Defaults to "px".
+        tooltip_text (str, optional): The tooltip text. Defaults to None.
+
 
     """
-    if size not in range(1, 7):
+    if level not in range(1, 7):
         raise ValueError("Size must be between 1 and 6")
 
-    size = "#" * size  # type: ignore
-    title = ui.markdown(f"{size} {value}")
+    level = "#" * level  # type: ignore
+    mdtitle = ui.markdown(f"{level} {value}")
 
     if center:
-        title = title.classes("text-center")
+        mdtitle = mdtitle.classes("text-center")
     if background:
-        title = title.style(f"background-color: {background};")
+        mdtitle = mdtitle.style(f"background-color: {background};")
 
-    title = title.style(f"margin: {margin}{unit};").style(f"border-radius: {border_radius}{unit};")
+    mdtitle = mdtitle.style(f"margin: {margin}{unit};").style(
+        f"border-radius: {border_radius}{unit};"
+    )
     if tooltip_text:
         tooltip(tooltip_text)
 
-    return title
+    return mdtitle
 
 
 def list_popup(
@@ -261,7 +265,7 @@ def list_popup(
 
     with ui.dialog().classes(width_class) as dialog, ui.card().classes(width_class):
         if title:
-            markdown_title(title, size=4)
+            markdown_heading(title, level=4)
         for item in items:
             with ui.row().classes("items-center"):
                 item_display_fn(item)
